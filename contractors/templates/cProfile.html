@@ -1,0 +1,187 @@
+{% load custom_tags %}
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCon Contractor Profile</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg custom-navbar" data-bs-theme="dark">
+        <div class="container-fluid">
+            {% if 'contractor_id' in request.session %}
+            <a class="navbar-brand" href="/contractor/dashboard">reCon</a>
+            <span class="navbar-text">{{contractor.company_name}}</span>
+            {% else %}
+            <a class="navbar-brand" href="/user/dashboard">reCon</a>
+            <span class="navbar-text">{{user.first_name}} {{user.last_name}}</span>
+            {% endif %}
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        {% if 'contractor_id' in request.session %}
+                        <a class="nav-link" aria-current="page" href="/contractor/dashboard">Dashboard</a>
+                        {% else %}
+                        <a class="nav-link" aria-current="page" href="/user/dashboard">Dashboard</a>
+                        {% endif %}
+                    </li>
+                    {% if 'user_id' in request.session %}
+                    <li class="nav-item">
+                        <a class="nav-link" href="/user/browse">Browse Contractors</a>
+                    </li>
+                    {% endif %}
+                    {% if 'contractor_id' in request.session %}
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active fw-bold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Profile
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/contractor/profile/{{contractor.id}}">View Profile</a></li>
+                            <li><a class="dropdown-item" href="/contractor/profile/{{contractor.id}}/edit">Edit Profile</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Projects
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/contractor/projects/create">Create Project</a></li>
+                        </ul>
+                    </li>
+                    {% endif %}
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <!-- main content -->
+    <div class="container-fluid mt-5 pb-5 d-flex flex-column">
+        <div class="d-flex mb-3 align-items-center">
+            {% if contractor.logo %}
+            <div class="me-3"><img src="{{contractor.logo.url}}" class="img-thumbnail rounded-circle logo"></div>
+            {% endif %}
+            <p class="h4 me-3 mt-1 fw-bold">{{contractor.company_name}}</p>
+            {% if 'contractor_id' in request.session %}
+            <a href="/contractor/profile/{{contractor.id}}/edit"><button class="btn btn-primary btn-sm">Edit Profile</button></a>
+            {% endif %}
+        </div>
+        {% if contractor.company_description %}
+        <div>
+            <p>{{contractor.company_description}}</p>
+        </div>
+        {% endif %}
+        <div>
+            <p class="fw-bold">Specialization: <span class="fw-lighter">{{contractor.specialization}}</span> </p>
+        </div>
+        <div class="d-flex flex-column">
+            <p class="fw-bold">Contact Info:</p>
+            <ul>
+                <li>Email: {{contractor.email}}</li>
+                <li>Mobile: {{contractor.mobile}}</li>
+            </ul>
+        </div>
+        {% if 'contractor_id' in request.session %}
+        <div class="mb-3">
+            <form action="{{contractor.id}}/upload" id="upload" method="POST" enctype="multipart/form-data">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Upload Photo:</label>
+                    <div class="d-flex align-items-center">
+                        <input class="form-control form-control-sm me-3" type="file" name="image" id="u_image" style="width: 300px;"/>
+                        <button id="reset-file" type="button" class="btn btn-secondary btn-sm">Clear</button>
+                    </div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label fw-bold">Caption:</label>
+                    <textarea class="form-control" name='caption' style="width: 400px;"></textarea>
+                </div>
+                <input class="btn btn-primary btn-sm" type="submit" value="Upload">
+            </form>
+        </div>
+        {% endif %}
+        <div class="mb-3 border-bottom border-warning">
+        </div>
+        <div class="text-center">
+            {% if not contractor.photos.all %}
+            <p>No Photos Uploaded.</p>
+            {% else %}
+            <div class="row">
+                {% for photo in contractor.photos.all reversed %}
+                <div class="col-md-4 col-12">
+                    <img src="{{photo.image.url}}" class="img-thumbnail border-warning border" data-bs-toggle="modal" data-bs-target="#photoModal" data-bs-whatever="{{photo.image.url}}" data-bs-caption="{{photo.caption}}">
+                    <div class="d-flex justify-content-between my-2">
+                        <p data-bs-whatever="{{photo.caption}}">{{photo.caption}}</p>
+                        {% if 'contractor_id' in request.session %}
+                        <div>
+                            <a href="/images/contractor/{{photo.id}}/delete" onclick="return confirm('Are you sure you want to delete this photo?')"><button class="btn btn-outline-danger btn-sm"><i class="bi bi-trash"></i></button></a>
+                        </div>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+                {% endif %}
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>By Jorge Jason Joaquino</p>
+    </footer>
+
+    <div class="modal fade" id="photoModal" tabindex="-1" aria-labelledby="photoModalLabel" aria-hidden="true">
+        <div class="modal-dialog modal-xl">
+            <div class="modal-content container-fluid">
+                <div class="modal-header">
+                    <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+                </div>
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <img src="" class="img-fluid">
+                        <p class="mt-2"></p>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        const photoModal = document.getElementById('photoModal')
+            if (photoModal) {
+            photoModal.addEventListener('show.bs.modal', event => {
+
+                const image = event.relatedTarget
+                const button = event.relatedTarget
+
+                const source = image.getAttribute('data-bs-whatever');
+                const caption = image.getAttribute('data-bs-caption');
+
+                const modalBodyImage = photoModal.querySelector('.modal-body img');
+                const modalBodyP = photoModal.querySelector('.modal-body p');
+                modalBodyImage.setAttribute('src', source);
+                modalBodyP.textContent = caption;
+            })
+        }
+    </script>
+    <script>
+        $(document).ready(function(){
+            $('#reset-file').click(function(e) {
+                $('#u_image').val('');
+                $('#u_image').wrap('<form>').closest('form').get(0).reset();
+                $('#u_image').unwrap();
+            });
+        })
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>

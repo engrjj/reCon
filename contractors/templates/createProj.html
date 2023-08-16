@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCon Create Project</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg custom-navbar" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/contractor/dashboard">reCon</a>
+            <span class="navbar-text">{{contractor.company_name}}</span>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/contractor/dashboard">Dashboard</a>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Profile
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/contractor/profile/{{contractor.id}}">View Profile</a></li>
+                            <li><a class="dropdown-item" href="/contractor/profile/{{contractor.id}}/edit">Edit Profile</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle active fw-bold" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Projects
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/contractor/register">Create Project</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/logout">Logout</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container text-center my-5">
+        <h3>Create Project</h3>
+    </div>
+    <div class="container d-flex flex-column flex-md-row pb-5">
+        <div class="container w-75">
+            <form id="create" method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">Project Name:</label>
+                    <input class="form-control" type="text" name="project_name" id="r_project_name"/>
+                    <div class="error-message" id="project_name-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Description:</label>
+                    <textarea class="form-control" type="text" name="project_description" id="r_project_description"></textarea>
+                    <div class="error-message" id="project_description-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Project Cost:</label>
+                    <input class="form-control" type="text" name="project_cost" id="r_project_cost"/>
+                    <div class="error-message" id="project_cost-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Target Completion Date:</label>
+                    <input class="form-control" type="date" name="completion_date" id="r_completion_date"/>
+                    <div class="error-message" id="completion_date-error"></div>
+                </div>
+                <div class="mb-3 d-flex justify-content-between">
+                    <a href="/contractor/dashboard" class="btn btn-danger">Cancel</a>
+                    <input type="submit" value="Create Project" class="btn btn-success"/>
+                </div>
+            </form>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>By Jorge Jason Joaquino</p>
+    </footer>
+    <!-- AJAX -->
+    <script>
+        $(document).ready(function() {
+            $('#create').on('submit', function(e){
+                e.preventDefault();
+
+                var p_name = $('#r_project_name').val();
+                var p_description = $('#r_project_description').val();
+                var p_cost = $('#r_project_cost').val();
+                var p_date = $('#r_completion_date').val();
+
+                $.ajax({
+                    type:'POST',
+                    url:'{% url "contractors:create_process" %}',
+                    data: {
+                        'project_name': p_name,
+                        'project_description': p_description,
+                        'project_cost': p_cost,
+                        'completion_date': p_date,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response){
+                        console.log(response);
+                        if(response.is_valid) {
+                            window.location.href='/contractor/dashboard';
+                        }
+                        else {
+                            $('.error-message').empty();
+                            for (oneError in response.errors) {
+                                console.log(oneError)
+                                console.log(response.errors[oneError])
+                                if(response.errors.hasOwnProperty(oneError)) {
+                                    var error_message = "<ul>" +
+                                    "<li style='color:red'>" + response.errors[oneError] + "</li>" +
+                                    "</ul>"
+                                    $('#' + oneError + '-error').append(error_message)
+                                }
+                            }
+                        }
+                    }
+
+                });
+            });
+        });
+    </script>
+        <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>

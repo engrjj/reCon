@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCon User Registration</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg custom-navbar" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">reCon</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Register
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/contractor/register">Contractor</a></li>
+                            <li><a class="dropdown-item" href="/user/register">Client</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/login">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container text-center my-5">
+        <h3>Client Registration</h3>
+    </div>
+    <div class="container d-flex flex-column flex-md-row pb-5">
+        <div class="container w-75">
+            <h4 class="my-3">Registration</h3>
+        
+            <form id="register" method="POST">
+                {% csrf_token %}
+                <div class="mb-3">
+                    <label class="form-label">First Name:</label>
+                    <input class="form-control" type="text" name="fname" id="r_fname"/>
+                    <div id="fname-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Last Name:</label>
+                    <input class="form-control" type="text" name="lname" id="r_lname"/>
+                    <div id="lname-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Email:</label>
+                    <input class="form-control" type="email" name="email" id="r_email"/>
+                    <div id="email-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Password:</label>
+                    <input class="form-control" type="password" name="password" id="r_password">
+                    <div id="password-error"></div>
+                </div>
+                <div class="mb-3">
+                    <label class="form-label">Confirm Password:</label>
+                    <input class="form-control" type="password" name="cpassword" id="c_password">
+                    <div id="cpassword-error"></div>
+                </div>
+                <div class="mb-3 d-flex justify-content-between">
+                    <a href="/login" class="btn btn-danger">Cancel</a>
+                    <input type="submit" value="Register" class="btn btn-success"/>
+                </div>
+            </form>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>By Jorge Jason Joaquino</p>
+    </footer>
+    <script>
+        $(document).ready(function() {
+            $('#register').on('submit', function(e){
+                e.preventDefault();
+
+                var f_name = $('#r_fname').val();
+                var l_name = $('#r_lname').val();
+                var r_email = $('#r_email').val();
+                var r_password = $('#r_password').val();
+                var c_password = $('#c_password').val();
+
+                $.ajax({
+                    type:'POST',
+                    url:'{% url "users:user_process" %}',
+                    data: {
+                        'fname': f_name,
+                        'lname': l_name,
+                        'email': r_email,
+                        'password': r_password,
+                        'cpassword': c_password,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response){
+                        if(response.is_valid) {
+                            window.location.href='/user/dashboard';
+                        }
+                        else {
+                            if(response.errors.fname) {
+                                $('#fname-error').empty()
+                                var fname_error = "<ul>" +
+                                "<li style='color:red'>"+response.errors.fname+"</li>" +
+                                "</ul>"
+                                $('#fname-error').append(fname_error)
+                            }
+                            else {
+                                $('#fname-error').empty()
+                            }
+                            if(response.errors.lname) {
+                                $('#lname-error').empty()
+                                var lname_error = "<ul>" +
+                                "<li style='color:red'>"+response.errors.lname+"</li>" +
+                                "</ul>"
+                                $('#lname-error').append(lname_error)
+                            }
+                            else {
+                                $('#lname-error').empty()
+                            }
+                            if(response.errors.email) {
+                                $('#email-error').empty()
+                                var email_error = "<ul>" +
+                                "<li style='color:red'>"+response.errors.email+"</li>" +
+                                "</ul>"
+                                $('#email-error').append(email_error)
+                            }
+                            else {
+                                $('#email-error').empty()
+                            }
+                            if(response.errors.password) {
+                                $('#password-error').empty()
+                                var password_error = "<ul>" +
+                                "<li style='color:red'>"+response.errors.password+"</li>" +
+                                "</ul>"
+                                $('#password-error').append(password_error)
+                            }
+                            else {
+                                $('#password-error').empty()
+                            }
+                            if(response.errors.cpassword) {
+                                $('#cpassword-error').empty()
+                                var cpassword_error = "<ul>" +
+                                "<li style='color:red'>"+response.errors.cpassword+"</li>" +
+                                "</ul>"
+                                $('#cpassword-error').append(cpassword_error)
+                            }
+                            else {
+                                $('#cpassword-error').empty()
+                            }
+                        }
+                    }
+                });
+            });
+        });  
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>

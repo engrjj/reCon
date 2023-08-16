@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>reCon Login</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-4bw+/aepP/YC94hEpVNVgiZdgIC5+VKNBQNGCHeKRQN+PtmoHDEXuppvnDJzQIu9" crossorigin="anonymous">
+    {% load static %}
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">  
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+</head>
+<body>
+    <nav class="navbar navbar-expand-lg custom-navbar" data-bs-theme="dark">
+        <div class="container-fluid">
+            <a class="navbar-brand" href="/">reCon</a>
+            <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                <span class="navbar-toggler-icon"></span>
+            </button>
+            <div class="collapse navbar-collapse justify-content-end" id="navbarNavDropdown">
+                <ul class="navbar-nav">
+                    <li class="nav-item dropdown">
+                        <a class="nav-link dropdown-toggle" href="#" role="button" data-bs-toggle="dropdown" aria-expanded="false">
+                        Register
+                        </a>
+                        <ul class="dropdown-menu">
+                            <li><a class="dropdown-item" href="/contractor/register">Contractor</a></li>
+                            <li><a class="dropdown-item" href="/user/register">Client</a></li>
+                        </ul>
+                    </li>
+                    <li class="nav-item">
+                        <a class="nav-link" aria-current="page" href="/login">Login</a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+    </nav>
+    <div class="container-fluid mt-5 pb-5">
+        <div class="text-center my-5">
+            <h1>reCon</h1>
+        </div>
+        <div class="d-flex flex-column flex-md-row pb-5">
+            <div class="container">
+                <h3 class="my-3">Not yet registered?</h3>
+                <div class="d-flex flex-row flex-md-column">
+                    <div class="mb-3 me-3">
+                        <a href="/contractor/register" class="btn btn-primary btn-lg"><h4>Contractor</h4></a>
+                    </div>
+                    <div class="mb-3">
+                        <a href="/user/register" class="btn btn-primary btn-lg"><h4>Client</h4></a>
+                    </div>
+                </div>
+            </div>
+            <div class="container">
+                <h3 class="my-3">Login</h3>
+                
+                <form id="login" method="POST">
+                    {% csrf_token %}
+                    <div class="mb-3">
+                        <label class="form-label">Email</label>
+                        <input class="form-control" type="email" name="email" id="id_email"/>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Password:</label>
+                        <input class="form-control" type="password" name="password"
+                        id="id_password"/>
+                    </div>
+                    <div id="login-error" class="mb-3"></div>
+                    <div class="mb-3">
+                        <input type="submit" value="Login" class="btn btn-primary"/>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+    <footer class="footer">
+        <p>By Jorge Jason Joaquino</p>
+    </footer>
+
+    <script>
+        $(document).ready(function() {
+            $('#login').on('submit', function(e) {
+                e.preventDefault();
+
+                var email = $('#id_email').val();
+                var password = $('#id_password').val();
+
+                $.ajax({
+                    type:'POST',
+                    url:'{% url "contractors:login_process" %}',
+                    data: {
+                        'email': email,
+                        'password': password,
+                        'csrfmiddlewaretoken': '{{ csrf_token }}'
+                    },
+                    success: function(response){
+                        if(response.is_valid && response.is_contractor) {
+                            window.location.href='/contractor/dashboard';
+                        }
+                        else if (response.is_valid && !response.is_contractor) {
+                            window.location.href='/user/dashboard'
+                        } 
+                        else {
+                            $('#login-error').empty()
+                            var error = "<ul>" +
+                                "<li style='color:red'>Invalid Email or Password</li>" +
+                                "</ul>"
+                            $('#login-error').append(error);
+
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.1/dist/js/bootstrap.bundle.min.js" integrity="sha384-HwwvtgBNo3bZJJLYd8oVXjrBZt8cqVSpeBNS5n7C8IVInixGAoxmnlMuBnhbgrkm" crossorigin="anonymous"></script>
+</body>
+</html>
